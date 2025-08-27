@@ -40,13 +40,14 @@ The following providers are currently implemented:
 
 ## Functions
 
-| Function | Parameters | Return Data | Description |
-|---|---|---|---|
-| login() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_LoginResult_](src/Data/LoginResult.php) | Obtain a signed login URL for the service that the system client can redirect to |
-| create() | [_CreateParams_](src/Data/CreateParams.php) | [_CreateResult_](src/Data/CreateResult.php) | Creates an account and returns the `username` which can be used to identify the account in subsequent requests, plus other account information |
-| suspend() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Suspend an account |
-| unsuspend() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Unsuspend an account |
-| terminate() | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Permanently delete an account |
+| Function        | Parameters | Return Data | Description |
+|-----------------|---|---|---|
+| login()         | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_LoginResult_](src/Data/LoginResult.php) | Obtain a signed login URL for the service that the system client can redirect to |
+| create()        | [_CreateParams_](src/Data/CreateParams.php) | [_CreateResult_](src/Data/CreateResult.php) | Creates an account and returns the `username` which can be used to identify the account in subsequent requests, plus other account information |
+| changePackage() | [_ChangePackageParams_](src/Data/ChangePackageParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Change the package of an existing account (i.e., an upgrade/downgrade). |
+| suspend()       | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Suspend an account |
+| unsuspend()     | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Unsuspend an account |
+| terminate()     | [_AccountIdentifierParams_](src/Data/AccountIdentifierParams.php) | [_EmptyResult_](src/Data/EmptyResult.php) | Permanently delete an account |
 
 ## Changelog
 
