@@ -152,10 +152,8 @@ class RankingCoachApi
         string $customerId,
         string $customerEmail,
         string $customerName,
-        string $domain,
-    ): void
-    {
-
+        string $domain
+    ): void {
         @[$firstName, $lastName] = explode(' ', $customerName, 2);
 
         $body = [
