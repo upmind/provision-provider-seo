@@ -2,12 +2,10 @@
 
 namespace Upmind\ProvisionProviders\Seo\Providers\RankingCoach\Helper;
 
+use Exception;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use Throwable;
+use JsonException;
 use Upmind\ProvisionProviders\Seo\Providers\RankingCoach\Data\Configuration;
 use Upmind\ProvisionBase\Exception\ProvisionFunctionError;
 
@@ -22,88 +20,6 @@ class RankingCoachApi
         $this->client = $client;
         $this->configuration = $configuration;
     }
-
-    private function resolveCommand(string $command): string
-    {
-        return $this->configuration->sandbox
-            ? "/api_test/$command"
-            : "/api/$command";
-    }
-
-    /**
-     * @throws GuzzleException
-     */
-    public function makeRequest(string $command, ?array $body = null, ?string $method = 'POST'): ?array
-    {
-        $requestParams = [];
-
-        $body['api_username'] = $this->configuration->username;
-        $body['api_password'] = $this->configuration->password;
-        $body = json_encode($body);
-
-        $requestParams['body'] = $body;
-
-
-        $response = $this->client->request($method, $this->resolveCommand($command), $requestParams);
-        $result = $response->getBody()->getContents();
-
-        $response->getBody()->close();
-
-        if ($result === "") {
-            return null;
-        }
-
-        return $this->parseResponseData($result);
-    }
-
-    /**
-     * @throws ProvisionFunctionError
-     */
-    private function parseResponseData(string $result): array
-    {
-        $parsedResult = json_decode($result, true);
-
-        if (!$parsedResult) {
-            throw ProvisionFunctionError::create('Unknown Provider API Error')
-                ->withData([
-                    'response' => $result,
-                ]);
-        }
-
-        if ($error = $this->getResponseErrorMessage($parsedResult)) {
-            throw ProvisionFunctionError::create($error)
-                ->withData([
-                    'response' => $parsedResult,
-                ]);
-        }
-
-        return $parsedResult;
-    }
-
-    /**
-     * @param $responseData
-     * @return string|null
-     */
-    protected function getResponseErrorMessage($responseData): ?string
-    {
-
-        $errorMessage = null;
-
-        if (isset($responseData['status']) && $responseData['status'] == "error") {
-            if (isset($responseData['message'])) {
-                $errorMessage = $responseData['message'];
-            }
-
-            if (isset($responseData['additional_infos'])) {
-                foreach ($responseData['additional_infos'] as $value) {
-                    $errorMessage .= "$value. ";
-                }
-            }
-        }
-
-        return $errorMessage ?? null;
-    }
-
 
     /**
      * @param string $userId
@@ -124,14 +40,13 @@ class RankingCoachApi
      */
     public function getAccountData(string $userId): array
     {
-
         try {
             $body = [
                 'external_id' => $userId,
             ];
 
             return $this->makeRequest('get_user', $body)["additional_infos"];
-        } catch (\Exception) {
+        } catch (Exception $ex) {
             $body = [
                 'email' => $userId,
             ];
@@ -159,7 +74,7 @@ class RankingCoachApi
         $body = [
             'email' => $customerEmail,
             'firstname' => $firstName,
-            'lastname' => $lastName,
+            'lastname' => $lastName ?? $firstName,
             'external_id' => $customerId,
             'api_params_domain' => $domain
         ];
@@ -174,7 +89,6 @@ class RankingCoachApi
      */
     public function suspend(string $userId): void
     {
-
         $body = [
             'external_id' => $userId,
         ];
@@ -208,7 +122,7 @@ class RankingCoachApi
         $account = $this->getAccountData($userId);
         $currentSubscription = null;
         foreach ($account['subscriptions'] as $subscription) {
-            if ($subscription['status'] == "active") {
+            if ($subscription['status'] === "active") {
                 $currentSubscription = $subscription['id'];
             }
         }
@@ -239,7 +153,6 @@ class RankingCoachApi
      */
     public function login(string $userId): string
     {
-
         $session = $this->getAccountData($userId)['session_id'];
 
         $username = $this->configuration->username;
@@ -255,7 +168,6 @@ class RankingCoachApi
      */
     public function terminate(string $userId): void
     {
-
         $body = [
             'external_id' => $userId,
         ];
@@ -272,16 +184,106 @@ class RankingCoachApi
      */
     private function getSubscriptionId(string $package): int
     {
-
         $response = $this->makeRequest("get_subscriptions");
 
         foreach ($response as $subscription) {
-            if ($subscription['name'] == $package) {
+            if ($subscription['name'] === $package) {
                 return $subscription['id'];
             }
         }
 
         throw ProvisionFunctionError::create("Subscription '$package' not found")
             ->withData(['response' => $response]);
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    private function makeRequest(string $endpoint, ?array $body = null): ?array
+    {
+        if ($body === null) {
+            $body = [];
+        }
+
+        $body['api_username'] = $this->configuration->getUsername();
+        $body['api_password'] = $this->configuration->getPassword();
+
+        try {
+            $body = json_encode($body, JSON_THROW_ON_ERROR);
+        } catch (JsonException $e) {
+            unset($body['api_username'], $body['api_password']);
+
+            throw ProvisionFunctionError::create('Could not encode request body', $e)
+                ->withData([
+                    'request' => $body,
+                ]);
+        }
+
+        $response = $this->client->request('POST', $endpoint, ['body' => $body]);
+        $result = $response->getBody()->getContents();
+
+        $response->getBody()->close();
+
+        if ($result === '') {
+            return null;
+        }
+
+        return $this->parseResponseData($result);
+    }
+
+    /**
+     * @throws \Upmind\ProvisionBase\Exception\ProvisionFunctionError
+     */
+    private function parseResponseData(string $result): array
+    {
+        try {
+            $parsedResult = json_decode($result, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $ex) {
+            throw ProvisionFunctionError::create('Could not decode Provider API Response')
+                ->withData([
+                    'response' => $result,
+                ]);
+        }
+
+        if (!$parsedResult) {
+            throw ProvisionFunctionError::create('Unknown Provider API Error')
+                ->withData([
+                    'response' => $result,
+                ]);
+        }
+
+        if ($error = $this->getResponseErrorMessage($parsedResult)) {
+            throw ProvisionFunctionError::create($error)
+                ->withData([
+                    'response' => $parsedResult,
+                ]);
+        }
+
+        return $parsedResult;
+    }
+
+    /**
+     * @param $responseData
+     * @return string|null
+     */
+    private function getResponseErrorMessage($responseData): ?string
+    {
+        if (!isset($responseData['status']) || $responseData['status'] !== 'error') {
+            return null;
+        }
+
+        // Set Generic Response message if `message` is not set.
+        $errorMessage = $responseData['message'] ?? 'Response Error.';
+
+        $additionalInfo = [];
+
+        if (isset($responseData['additional_infos'])) {
+            foreach ($responseData['additional_infos'] as $value) {
+                $additionalInfo[] = $value;
+            }
+        }
+
+        // Return error message with additional info if available.
+        return empty($additionalInfo) ? $errorMessage : $errorMessage . ' ' . implode(' ', $additionalInfo);
     }
 }

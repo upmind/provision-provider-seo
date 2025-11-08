@@ -24,4 +24,19 @@ class Configuration extends DataSet
             'sandbox' => ['nullable', 'boolean'],
         ]);
     }
+
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function isSandbox(): bool
+    {
+        return (bool)$this->sandbox;
+    }
 }

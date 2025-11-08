@@ -50,29 +50,26 @@ class Provider extends Category implements ProviderInterface
     public function create(CreateParams $params): CreateResult
     {
         try {
-
             if (empty($params->customer_name)) {
                 $this->errorResult('Customer name is required!');
             }
 
-            $domainName = $params->domain;
-
             $this->api()->createAccount(
-                (string)$params->customer_id,
+                (string) $params->customer_id,
                 $params->customer_email,
                 $params->customer_name,
-                $domainName
+                $params->domain
             );
 
             $this->api()->unsuspend((string) $params->customer_id);
 
             return CreateResult::create()
-                ->setUsername((string)$params->customer_id)
-                ->setDomain($domainName)
+                ->setUsername((string) $params->customer_id)
+                ->setDomain($params->domain)
                 ->setPackageIdentifier($params->package_identifier)
                 ->setMessage('Account created');
 
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->handleException($e, $params);
         }
     }
@@ -92,7 +89,7 @@ class Provider extends Category implements ProviderInterface
 
     /**
      * @throws \Upmind\ProvisionBase\Exception\ProvisionFunctionError
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function changePackage(ChangePackageParams $params): EmptyResult
     {
@@ -124,7 +121,7 @@ class Provider extends Category implements ProviderInterface
             $this->api()->suspend((string)$params->username);
 
             return EmptyResult::create()->setMessage('Account suspended');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->handleException($e, $params);
         }
     }
@@ -145,7 +142,7 @@ class Provider extends Category implements ProviderInterface
             $this->api()->unsuspend((string)$params->username);
 
             return EmptyResult::create()->setMessage('Account unsuspended');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->handleException($e, $params);
         }
     }
@@ -160,9 +157,32 @@ class Provider extends Category implements ProviderInterface
             $this->api()->terminate((string)$params->username);
 
             return EmptyResult::create()->setMessage('Account suspended');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->handleException($e, $params);
         }
+    }
+
+    public function api(): RankingCoachApi
+    {
+        if (isset($this->api)) {
+            return $this->api;
+        }
+
+        $client = new Client([
+            'base_uri' => $this->configuration->isSandbox() ?
+                'https://www.rankingcoach.com/api_test/' :
+                'https://www.rankingcoach.com/api/',
+            RequestOptions::HEADERS => [
+                'User-Agent' => 'upmind/provision-provider-seo v1.0',
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ],
+            RequestOptions::TIMEOUT => 30, // seconds
+            RequestOptions::CONNECT_TIMEOUT => 5, // seconds
+            'handler' => $this->getGuzzleHandlerStack()
+        ]);
+
+        return $this->api = new RankingCoachApi($client, $this->configuration);
     }
 
     /**
@@ -171,12 +191,12 @@ class Provider extends Category implements ProviderInterface
      * @throws \Upmind\ProvisionBase\Exception\ProvisionFunctionError
      * @throws \Throwable
      */
-    protected function handleException(\Throwable $e, $params = null): void
+    protected function handleException(Throwable $e, $params = null): void
     {
         if (($e instanceof RequestException) && $e->hasResponse()) {
             $response = $e->getResponse();
 
-            $body = trim($response === null ? '' : $response->getBody()->__toString());
+            $body = trim($response === null ? '' : $response->getBody()->getContents());
             $responseData = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
 
             $errorMessage = $responseData['message'] ?? $response->getReasonPhrase();
@@ -190,26 +210,5 @@ class Provider extends Category implements ProviderInterface
         }
 
         throw $e;
-    }
-
-    public function api(): RankingCoachApi
-    {
-        if (isset($this->api)) {
-            return $this->api;
-        }
-
-        $client = new Client([
-            'base_uri' => 'https://www.rankingcoach.com/',
-            RequestOptions::HEADERS => [
-                'User-Agent' => 'upmind/provision-provider-seo v1.0',
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ],
-            RequestOptions::TIMEOUT => 30, // seconds
-            RequestOptions::CONNECT_TIMEOUT => 5, // seconds
-            'handler' => $this->getGuzzleHandlerStack()
-        ]);
-
-        return $this->api = new RankingCoachApi($client, $this->configuration);
     }
 }
