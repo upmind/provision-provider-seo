@@ -74,7 +74,7 @@ class RankingCoachApi
         $body = [
             'email' => $customerEmail,
             'firstname' => $firstName,
-            'lastname' => $lastName ?? $firstName,
+            'lastname' => empty($lastName) ? $firstName : $lastName,
             'external_id' => $customerId,
             'api_params_domain' => $domain
         ];
