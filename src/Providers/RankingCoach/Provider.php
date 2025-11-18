@@ -40,7 +40,7 @@ class Provider extends Category implements ProviderInterface
         return AboutData::create()
             ->setName('Ranking Coach')
             ->setDescription('Create, login to and delete Ranking Coach accounts')
-            ->setLogoUrl('https://api.upmind.io/images/logos/provision/ranking-coach-logo@2x.png');
+            ->setLogoUrl('https://api.upmind.io/images/logos/provision/ranking-coach-logo.svg');
     }
 
     /**
