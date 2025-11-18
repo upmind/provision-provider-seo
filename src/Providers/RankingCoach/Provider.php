@@ -54,6 +54,14 @@ class Provider extends Category implements ProviderInterface
                 $this->errorResult('Customer name is required!');
             }
 
+            if (filter_var($params->customer_id, FILTER_VALIDATE_EMAIL)) {
+                $this->errorResult('Customer ID cannot be an email address!');
+            }
+
+            if (!ctype_alnum(explode('@', $params->customer_email)[0])) {
+                $this->errorResult('Customer email only allows for alphanumeric characters!');
+            }
+
             $this->api()->createAccount(
                 (string) $params->customer_id,
                 $params->customer_email,
