@@ -37,6 +37,7 @@ Alternatively you can start using it for your business immediately with [Upmind.
 
 The following providers are currently implemented:
   - [marketgoo](https://marketgoo.docs.apiary.io/)
+  - [Ranking Coach](https://www.rankingcoach.com/)
 
 ## Functions
 
