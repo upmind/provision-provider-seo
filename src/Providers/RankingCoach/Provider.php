@@ -66,10 +66,9 @@ class Provider extends Category implements ProviderInterface
                 (string) $params->customer_id,
                 $params->customer_email,
                 $params->customer_name,
-                $params->domain
+                $params->domain,
+                $params->package_identifier
             );
-
-            $this->api()->unsuspend((string) $params->customer_id);
 
             return CreateResult::create()
                 ->setUsername((string) $params->customer_id)
