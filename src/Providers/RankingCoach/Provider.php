@@ -101,10 +101,7 @@ class Provider extends Category implements ProviderInterface
     public function changePackage(ChangePackageParams $params): EmptyResult
     {
         try {
-            $this->api()->changePackage(
-                (string)$params->username,
-                $params->package_identifier,
-            );
+            $this->api()->changePackage((string) $params->username, $params->package_identifier);
 
             return EmptyResult::create()->setMessage('Account updated');
         } catch (Throwable $e) {
