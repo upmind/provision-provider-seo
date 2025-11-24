@@ -33,5 +33,12 @@
                 "Upmind\\ProvisionProviders\\Seo\\LaravelServiceProvider"
             ]
         }
+    },
+    "config": {
+        "audit": {
+            "ignore": [
+                "PKSA-wws7-mr54-jsny"
+            ]
+        }
     }
 }
