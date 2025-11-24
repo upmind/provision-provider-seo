@@ -2,6 +2,7 @@
 
 namespace Upmind\ProvisionProviders\Seo\Providers\RankingCoach\Helper;
 
+use DateTimeImmutable;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -115,31 +116,70 @@ class RankingCoachApi
      */
     public function changePackage(string $userId, string $planId): void
     {
+        $subscriptionId = $this->getSubscriptionId($planId);
 
         $account = $this->getAccountData($userId);
+
         $currentSubscription = null;
+
         foreach ($account['subscriptions'] as $subscription) {
-            if ($subscription['status'] === "active") {
-                $currentSubscription = $subscription['id'];
+            $createdAt = DateTimeImmutable::createFromFormat('Y-m-d H:i:s.u', $subscription['created']);
+
+            // If $currentSubscription is not yet set, set it and move to next.
+            if ($currentSubscription === null) {
+                $currentSubscription = $subscription;
+                $currentSubscription['created'] = $createdAt;
+
+                continue;
             }
+
+            // if current subscription is active and the subscription from the loop is not active, skip
+            if ($currentSubscription['status'] === 'active' && $subscription['status'] !== 'active') {
+                continue;
+            }
+
+            // If $currentSubscription is set, but not active, set the active from the loop
+            if ($currentSubscription['status'] !== 'active' && $subscription['status'] === 'active') {
+                $currentSubscription = $subscription;
+                $currentSubscription['created'] = $createdAt;
+
+                continue;
+            }
+
+            // If both are active as expected, get the latest one.
+            if ($currentSubscription['status'] === 'active' && $subscription['status'] === 'active') {
+                $currentSubscription = $currentSubscription['created'] > $createdAt
+                    ? $currentSubscription
+                    : $subscription;
+
+                continue;
+            }
+
+            // Last case is both inactive, get the latest one.
+            $currentSubscription = $currentSubscription['created'] > $createdAt
+                ? $currentSubscription
+                : $subscription;
         }
 
-        if (!$currentSubscription) {
-            $this->unsuspend($userId);
+        // If no subscription set, activate account with provided plan
+        if ($currentSubscription === null) {
+            $this->activateUser($userId, $subscriptionId);
+
             return;
         }
 
-        if (!is_numeric($planId)) {
-            $planId = (string) $this->getSubscriptionId($planId);
+        // Otherwise, if latest available subscription is not active, unsuspend (activate) first.
+        if ($currentSubscription['status'] !== 'active') {
+            $this->unsuspend($userId);
         }
 
         $body = [
             'external_id' => $userId,
-            'subscription_id' => $currentSubscription,
-            'update_subscription_id' => $planId,
+            'subscription_id' => $currentSubscription['id'],
+            'update_subscription_id' => $subscriptionId,
         ];
 
-        $this->makeRequest("subscription_update", $body);
+        $this->makeRequest('subscription_update', $body);
     }
 
 
