@@ -7,6 +7,10 @@
         {
             "name": "Harry Lewis",
             "email": "harry@upmind.com"
+        },
+        {
+            "name": "Roussetos Karafyllakis",
+            "email": "rou.karafyllakis@upmind.com"
         }
     ],
     "require": {
