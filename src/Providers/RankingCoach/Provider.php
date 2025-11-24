@@ -62,8 +62,10 @@ class Provider extends Category implements ProviderInterface
                 $this->errorResult('Customer email only allows for alphanumeric characters!');
             }
 
+            $customerId = $params->service_id ?? (string) $params->customer_id;
+
             $this->api()->createAccount(
-                (string) $params->customer_id,
+                $customerId,
                 $params->customer_email,
                 $params->customer_name,
                 $params->domain,
@@ -71,7 +73,7 @@ class Provider extends Category implements ProviderInterface
             );
 
             return CreateResult::create()
-                ->setUsername((string) $params->customer_id)
+                ->setUsername($customerId)
                 ->setDomain($params->domain)
                 ->setPackageIdentifier($params->package_identifier)
                 ->setMessage('Account created');
