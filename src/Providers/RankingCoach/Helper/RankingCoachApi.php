@@ -57,29 +57,32 @@ class RankingCoachApi
     }
 
     /**
-     * @param string $customerId
-     * @param string $customerEmail
-     * @param string $customerName
-     * @return void
      * @throws GuzzleException
      */
     public function createAccount(
-        string $customerId,
+        string $externalId,
         string $customerEmail,
         string $customerName,
-        string $domain
+        string $domain,
+        string $planId
     ): void {
+        $subscriptionId = $this->getSubscriptionId($planId);
+
         @[$firstName, $lastName] = explode(' ', $customerName, 2);
 
         $body = [
             'email' => $customerEmail,
             'firstname' => $firstName,
             'lastname' => empty($lastName) ? $firstName : $lastName,
-            'external_id' => $customerId,
+            'external_id' => $externalId,
             'api_params_domain' => $domain
         ];
 
+        // First create the user
         $this->makeRequest('update_user', $body);
+
+        // Then activate with the requests plan/subscription.
+        $this->activateUser($externalId, $subscriptionId);
     }
 
     /**
@@ -97,17 +100,11 @@ class RankingCoachApi
     }
 
     /**
-     * @param string $userId
-     * @return void
      * @throws GuzzleException
      */
     public function unsuspend(string $userId): void
     {
-        $body = [
-            'external_id' => $userId,
-        ];
-
-        $this->makeRequest("activate_user", $body);
+        $this->activateUser($userId, null);
     }
 
     /**
@@ -133,7 +130,7 @@ class RankingCoachApi
         }
 
         if (!is_numeric($planId)) {
-            $planId = $this->getSubscriptionId($planId);
+            $planId = (string) $this->getSubscriptionId($planId);
         }
 
         $body = [
@@ -176,24 +173,57 @@ class RankingCoachApi
         $this->makeRequest('deactivate_user', $body);
     }
 
+    /**
+     * @throws GuzzleException
+     */
+    public function activateUser(string $userId, ?string $planId): void
+    {
+        $body = [
+            'external_id' => $userId,
+        ];
+
+        // Now set Subscription ID if provided.
+        if ($planId !== null) {
+            $body['subscription_id'] = $planId;
+        }
+
+        if (isset($body['subscription_id']) && !is_numeric($body['subscription_id'])) {
+            $body['subscription_id'] = (string) $this->getSubscriptionId($body['subscription_id']);
+        }
+
+        $this->makeRequest('activate_user', $body);
+    }
 
     /**
-     * @param string $package
-     * @return int
+     * Check if the provided package ID/Name exists in the account, otherwise error
+     *
      * @throws GuzzleException
      */
     private function getSubscriptionId(string $package): int
     {
-        $response = $this->makeRequest("get_subscriptions");
+        $response = $this->makeRequest('get_subscriptions');
 
         foreach ($response as $subscription) {
-            if ($subscription['name'] === $package) {
+            if ($this->isMatchingSubscription($package, $subscription)) {
                 return $subscription['id'];
             }
         }
 
-        throw ProvisionFunctionError::create("Subscription '$package' not found")
+        throw ProvisionFunctionError::create('Subscription ' . $package . ' not found')
             ->withData(['response' => $response]);
+    }
+
+    private function isMatchingSubscription(string $package, array $subscription): bool
+    {
+        if (!isset($subscription['id'], $subscription['name'])) {
+            return false;
+        }
+
+        if (!is_numeric($package)) {
+            return $package === (string) $subscription['name'];
+        }
+
+        return $package === (string) $subscription['id'];
     }
 
     /**
