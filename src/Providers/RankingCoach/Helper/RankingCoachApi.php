@@ -66,7 +66,7 @@ class RankingCoachApi
         string $domain,
         string $planId
     ): void {
-        $this->validateSubscriptionId($planId);
+        $subscriptionId = $this->getSubscriptionId($planId);
 
         @[$firstName, $lastName] = explode(' ', $customerName, 2);
 
@@ -82,7 +82,7 @@ class RankingCoachApi
         $this->makeRequest('update_user', $body);
 
         // Then activate with the requests plan/subscription.
-        $this->activateUser($externalId, $planId);
+        $this->activateUser($externalId, $subscriptionId);
     }
 
     /**
@@ -195,45 +195,35 @@ class RankingCoachApi
     }
 
     /**
-     * @throws GuzzleException
-     */
-    private function validateSubscriptionId(string $subscriptionId): void
-    {
-        // If subscription name, get the ID, should fail if not exists.
-        if (!is_numeric($subscriptionId)) {
-            $this->getSubscriptionId($subscriptionId);
-
-            return;
-        }
-
-        $response = $this->makeRequest("get_subscriptions");
-
-        foreach ($response as $subscription) {
-            if ($subscriptionId === (string) $subscription['id']) {
-                return;
-            }
-        }
-
-        throw ProvisionFunctionError::create('Subscription ' . $subscriptionId . ' not found')
-            ->withData(['response' => $response]);
-    }
-
-
-    /**=
+     * Check if the provided package ID/Name exists in the account, otherwise error
+     *
      * @throws GuzzleException
      */
     private function getSubscriptionId(string $package): int
     {
-        $response = $this->makeRequest("get_subscriptions");
+        $response = $this->makeRequest('get_subscriptions');
 
         foreach ($response as $subscription) {
-            if ($subscription['name'] === $package) {
+            if ($this->isMatchingSubscription($package, $subscription)) {
                 return $subscription['id'];
             }
         }
 
-        throw ProvisionFunctionError::create("Subscription '$package' not found")
+        throw ProvisionFunctionError::create('Subscription ' . $package . ' not found')
             ->withData(['response' => $response]);
+    }
+
+    private function isMatchingSubscription(string $package, array $subscription): bool
+    {
+        if (!isset($subscription['id'], $subscription['name'])) {
+            return false;
+        }
+
+        if (!is_numeric($package)) {
+            return $package === (string) $subscription['name'];
+        }
+
+        return $package === (string) $subscription['id'];
     }
 
     /**
