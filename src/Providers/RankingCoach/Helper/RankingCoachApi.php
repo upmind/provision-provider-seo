@@ -116,7 +116,7 @@ class RankingCoachApi
      */
     public function changePackage(string $userId, string $planId): void
     {
-        $this->validateSubscriptionId($planId);
+        $subscriptionId = $this->getSubscriptionId($planId);
 
         $account = $this->getAccountData($userId);
 
@@ -163,7 +163,7 @@ class RankingCoachApi
 
         // If no subscription set, activate account with provided plan
         if ($currentSubscription === null) {
-            $this->activateUser($userId, $planId);
+            $this->activateUser($userId, $subscriptionId);
 
             return;
         }
@@ -173,15 +173,10 @@ class RankingCoachApi
             $this->unsuspend($userId);
         }
 
-        // And now continue to change package.
-        if (!is_numeric($planId)) {
-            $planId = (string) $this->getSubscriptionId($planId);
-        }
-
         $body = [
             'external_id' => $userId,
             'subscription_id' => $currentSubscription['id'],
-            'update_subscription_id' => $planId,
+            'update_subscription_id' => $subscriptionId,
         ];
 
         $this->makeRequest('subscription_update', $body);
