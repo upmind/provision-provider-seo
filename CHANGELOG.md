@@ -2,6 +2,13 @@
 
 All notable changes to the package will be documented in this file.
 
+## [v1.4](https://github.com/upmind-automation/provision-provider-seo/releases/tag/v1.4) - 2025-11-25
+
+- Add optional `service_id` to CreateParams
+- Use `service_id` as external_id during RankingCoach create()
+- Fix RankingCoach create() usage of package_identifier
+- Fix RankingCoach changePackage() for suspended accounts
+
 ## [v1.3](https://github.com/upmind-automation/provision-provider-seo/releases/tag/v1.3) - 2025-11-18
 
 - Add Ranking Coach provider
