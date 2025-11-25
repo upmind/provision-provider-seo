@@ -17,6 +17,7 @@ use Upmind\ProvisionBase\Provider\DataSet\Rules;
  * @property-read string $package_identifier Service package identifier, if any
  * @property-read string[]|null $promo_codes Optional array of promo codes applied to the order
  * @property-read mixed[]|null $extra Any extra data to pass to the service endpoint
+ * @property-read string|null $service_id The Product/Service ID in the system
  */
 class CreateParams extends DataSet
 {
@@ -33,6 +34,7 @@ class CreateParams extends DataSet
             'promo_codes' => ['nullable', 'array'],
             'promo_codes.*' => ['string'],
             'extra' => ['nullable', 'array'],
+            'service_id' => ['nullable', 'string'],
         ]);
     }
 }
