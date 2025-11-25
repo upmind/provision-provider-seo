@@ -62,7 +62,7 @@ class Provider extends Category implements ProviderInterface
                 $this->errorResult('Customer email only allows for alphanumeric characters!');
             }
 
-            $customerId = $params->service_id ?? (string) $params->customer_id;
+            $customerId = (string)($params->service_id ?: $params->customer_id);
 
             $this->api()->createAccount(
                 $customerId,
