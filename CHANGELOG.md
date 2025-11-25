@@ -2,6 +2,10 @@
 
 All notable changes to the package will be documented in this file.
 
+## [v1.4.1](https://github.com/upmind-automation/provision-provider-seo/releases/tag/v1.4.1) - 2025-11-25
+
+- Widen illuminate/support version requirement
+
 ## [v1.4](https://github.com/upmind-automation/provision-provider-seo/releases/tag/v1.4) - 2025-11-25
 
 - Add optional `service_id` to CreateParams
