@@ -192,10 +192,7 @@ class RankingCoachApi
     {
         $session = $this->getAccountData($userId)['session_id'];
 
-        $username = $this->configuration->username;
-        $password = $this->configuration->password;
-
-        return "https://www.rankingcoach.com/index/login?session_id=$session&site_id=&api_username=$username&api_password=$password";
+        return "https://www.rankingcoach.com/index/login?session_id=$session&site_id=";
     }
 
     /**
