@@ -5,6 +5,7 @@ All notable changes to the package will be documented in this file.
 ## [v1.4.2](https://github.com/upmind-automation/provision-provider-seo/releases/tag/v1.4.2) - 2026-07-30
 
 - Remove incorrect validation of `customer_email` in RankingCoach create()
+- Fix RankingCoach login()
 
 ## [v1.4.1](https://github.com/upmind-automation/provision-provider-seo/releases/tag/v1.4.1) - 2025-11-25
 
