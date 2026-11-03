@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Upmind\ProvisionProviders\Seo\Providers\RankingCoach;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ResponseException;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Str;
 use Throwable;
@@ -195,10 +195,10 @@ class Provider extends Category implements ProviderInterface
      */
     protected function handleException(Throwable $e, $params = null): void
     {
-        if (($e instanceof RequestException) && $e->hasResponse()) {
+        if ($e instanceof ResponseException) {
             $response = $e->getResponse();
 
-            $body = trim($response === null ? '' : $response->getBody()->getContents());
+            $body = trim($response->getBody()->getContents());
             $responseData = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
 
             $errorMessage = $responseData['message'] ?? $response->getReasonPhrase();

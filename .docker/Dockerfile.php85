@@ -1,4 +1,4 @@
-FROM php:7.4-cli
+FROM php:8.5-cli
 
 # Install dependencies
 RUN apt update && \
@@ -10,7 +10,7 @@ RUN apt update && \
     unzip
 
 # Install Packages via PECL as not provided by PHP Source
-RUN pecl install xdebug-3.1.5 \
+RUN pecl install xdebug \
 	&& docker-php-ext-enable xdebug
 
 # Clear cache

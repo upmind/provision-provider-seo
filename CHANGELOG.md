@@ -2,6 +2,15 @@
 
 All notable changes to the package will be documented in this file.
 
+## Unreleased
+
+- Require PHP 8.3; support PHP 8.3, 8.4 and 8.5
+- Require Laravel 13 (`illuminate/support` ^13.0)
+- Require `upmind/provision-provider-base` v5
+- Update dev dependency to `phpstan/phpstan` ^2.0
+- Update RankingCoach error handling for Guzzle 8 `ResponseException`
+- Remove composer audit ignore list for PHP 7.4
+
 ## [v1.4.2](https://github.com/upmind-automation/provision-provider-seo/releases/tag/v1.4.2) - 2026-07-30
 
 - Remove incorrect validation of `customer_email` in RankingCoach create()
