@@ -147,7 +147,7 @@ class RankingCoachApi
             }
 
             // If both are active as expected, get the latest one.
-            if ($currentSubscription['status'] === 'active' && $subscription['status'] === 'active') {
+            if ($currentSubscription['status'] === 'active') {
                 $currentSubscription = $currentSubscription['created'] > $createdAt
                     ? $currentSubscription
                     : $subscription;

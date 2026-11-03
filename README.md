@@ -4,6 +4,7 @@
 
 This provision category defines functions to create and manage SEO service accounts.
 
+- [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Quick-start](#quick-start)
@@ -14,6 +15,12 @@ This provision category defines functions to create and manage SEO service accou
 - [Credits](#credits)
 - [License](#license)
 - [Upmind](#upmind)
+
+## Requirements
+
+- PHP 8.3, 8.4 or 8.5
+- Laravel 13 (`illuminate/*` ^13.0)
+- [upmind/provision-provider-base](https://packagist.org/packages/upmind/provision-provider-base) v5
 
 ## Installation
 
